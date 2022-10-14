@@ -211,7 +211,7 @@ namespace Substrate {
 
         static void render(Matrix<uchar>& input) {
 
-            uchar* data = input.host_data;
+            uchar* data = input.data(host);
 
             gl_name transformLoc = glGetUniformLocation(Surface::Object::shader_program, "transform");
             glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(Surface::Object::transformation_matrix));
