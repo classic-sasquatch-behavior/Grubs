@@ -24,7 +24,7 @@ namespace Cell {
 
 __global__ void draw_environment(Device_Ptr<int> environment, Device_Ptr<uchar> output) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.x, environment.y);
+    BOUNDS_2D(environment.dim[0], environment.dim[1]);
 
     int environment_value = environment(maj, min);
 
@@ -41,14 +41,14 @@ __global__ void draw_environment(Device_Ptr<int> environment, Device_Ptr<uchar> 
     int magnitude = fabsf(environment_value);
 
     for (int channel = 0; channel < 3; channel++) {
-        output.data[(((channel * environment.x) + maj) * environment.y) + min] = fminf(logf(10 * magnitude), 90) + polarity[channel];
+        output.data[(((channel * environment.dim[0]) + maj) * environment.dim[1]) + min] = fminf(logf(10 * magnitude), 90) + polarity[channel];
     }
 }
 
 //pretty goofy way to do this to be honest. But let's see how fast or slow it runs.
 __global__ void draw_cells(Device_Ptr<int> cells, Device_Ptr<uchar> output) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(cells.x, cells.y);
+    BOUNDS_2D(cells.dim[0], cells.dim[1]);
 
     if(cells(SELF, attribute::color_r) == 0 && cells(SELF, attribute::color_g) == 0 && cells(SELF, attribute::color_b) == 0) { return; }
 
@@ -64,9 +64,9 @@ __global__ void draw_cells(Device_Ptr<int> cells, Device_Ptr<uchar> output) {
 
 __global__ void spawn(curandState* random_states, Device_Ptr<int> result) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(result.x, result.y);
+    BOUNDS_2D(result.dim[0], result.dim[1]);
 
-    int id = LINEAR_CAST(maj, min, result.y);
+    int id = LINEAR_CAST(maj, min, result.dim[1]);
 
     curandState local_state = random_states[id];
 
@@ -93,7 +93,7 @@ __global__ void spawn(curandState* random_states, Device_Ptr<int> result) {
 //~15-16ms
 __global__ void change_environment(Device_Ptr<int> environment, Device_Ptr<int> cells) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.x, environment.y);
+    BOUNDS_2D(environment.dim[0], environment.dim[1]);
 
     int value = cells(SELF, attribute::value);
     int weight = cells(SELF, attribute::weight);
@@ -106,7 +106,7 @@ __global__ void change_environment(Device_Ptr<int> environment, Device_Ptr<int> 
 
 __global__ void dampen_environment(const float damping_factor, Device_Ptr<int> environment) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.x, environment.y);
+    BOUNDS_2D(environment.dim[0], environment.dim[1]);
 
     float value = environment(maj, min);
     environment(maj, min) = -truncf(value * damping_factor);
@@ -116,7 +116,7 @@ __global__ void dampen_environment(const float damping_factor, Device_Ptr<int> e
 
 __global__ void radiate_environment(Device_Ptr<int> environment) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.x, environment.y);
+    BOUNDS_2D(environment.dim[0], environment.dim[1]);
 
     int value = environment(SELF);
     FOR_MXN_EXCLUSIVE(n_maj, n_min, 3, 3, 
@@ -128,7 +128,7 @@ __global__ void radiate_environment(Device_Ptr<int> environment) {
 
 __global__ void set_targets(Device_Ptr<int> environment, Device_Ptr<int> cells, Device_Ptr<int> targets) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.x, environment.y);
+    BOUNDS_2D(environment.dim[0], environment.dim[1]);
 
 
     int attractor = cells(SELF, attribute::attractor);
@@ -156,7 +156,7 @@ __global__ void set_targets(Device_Ptr<int> environment, Device_Ptr<int> cells, 
 __global__ void conflict(Device_Ptr<int>cells, Device_Ptr<int>targets, Device_Ptr<int>future_cells, const int threshold = 3) {
 
     DIMS_2D(maj, min);
-    BOUNDS_2D(cells.x, cells.y);
+    BOUNDS_2D(cells.dim[0], cells.dim[1]);
 
     if (targets(maj, min) < 2) { return; }
 
@@ -192,7 +192,7 @@ __global__ void conflict(Device_Ptr<int>cells, Device_Ptr<int>targets, Device_Pt
 
 __global__ void move(Device_Ptr<int> environment, Device_Ptr<int> cells, Device_Ptr<int> targets, Device_Ptr<int> future_cells) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.x, environment.y);
+    BOUNDS_2D(environment.dim[0], environment.dim[1]);
 
     int attractor = cells(SELF, attribute::attractor);
     int weight = cells(SELF, attribute::weight);
@@ -211,11 +211,11 @@ __global__ void move(Device_Ptr<int> environment, Device_Ptr<int> cells, Device_
 
 __global__ void hatch(const int threshold, curandState* random_states, Device_Ptr<int> cells) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(cells.x, cells.y);
+    BOUNDS_2D(cells.dim[0], cells.dim[1]);
     if (cells(SELF, attribute::value) < threshold){return;}
 
     int random[3];
-    int id = LINEAR_CAST(maj, min, cells.x);
+    int id = LINEAR_CAST(maj, min, cells.dim[0]);
     curandState local_state = random_states[id];
 
     #pragma unroll
@@ -263,7 +263,7 @@ namespace Substrate {
 
                     curandState* states = Random::Initialize::curand_xor(Parameter::environment_area, value);
     
-                    Launch::kernel_2d(result.x, result.y);
+                    Launch::kernel_2d(result.dim[0], result.dim[1]);
                     spawn<<<LAUNCH>>>(states, result); //try using the nvidia debugger
                     SYNC_KERNEL(spawn); 
     
@@ -278,9 +278,9 @@ namespace Substrate {
             namespace Draw {
                 static Matrix<uchar> frame(Matrix<int>& cells, Matrix<int>& environment) {
 
-                    Matrix<uchar> output({cells.x, cells.y, 3}, 0);
+                    Matrix<uchar> output({cells.dim[0], cells.dim[1], 3}, 0);
     
-                    Launch::kernel_2d(cells.x, cells.y);
+                    Launch::kernel_2d(cells.dim[0], cells.dim[1]);
                     //draw_environment<<<LAUNCH>>>(environment, output);
                     //SYNC_KERNEL(draw_environment);
     
@@ -294,7 +294,7 @@ namespace Substrate {
 
             namespace Step {
                 static void polar(Matrix<int>& future_cells, Matrix<int>& environment, Matrix<int>& cells, Matrix<int>& targets, curandState* random) {
-                    Launch::kernel_2d(environment.x, environment.y);
+                    Launch::kernel_2d(environment.dim[0], environment.dim[1]);
                     
                     const int thresh = 20;
                     hatch << <LAUNCH >> > (thresh, random, cells);

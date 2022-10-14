@@ -7,7 +7,7 @@ typedef unsigned int gl_name;
 typedef unsigned char uchar;
 
 
-const static std::string path_to_shaders = "C:/Users/Thelonious/source/repos/Omega-null/Omega Null/on_display/include/display_manifold/objects/shaders/";
+const static std::string path_to_shaders = "/home/theo/Projects/Substrate/Display/shaders/";
 
 static std::string load_shader(std::string shader_name) {
 	fs::path shader_path = path_to_shaders + shader_name;
@@ -216,7 +216,7 @@ namespace Substrate {
             gl_name transformLoc = glGetUniformLocation(Surface::Object::shader_program, "transform");
             glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(Surface::Object::transformation_matrix));
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input.x, input.y, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input.dim[0], input.dim[1], 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
             glGenerateMipmap(GL_TEXTURE_2D);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);

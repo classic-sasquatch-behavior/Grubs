@@ -3,7 +3,7 @@
 {
     "env": {
         "myDefaultIncludePath": ["${workspaceFolder}/*", "${workspaceFolder}/include/*"],
-        "myCompilerPath": ["/usr/bin/nvcc"]
+        "myCompilerPath": ["/usr/bin/gcc"]
     },
 
     "configurations": [ 

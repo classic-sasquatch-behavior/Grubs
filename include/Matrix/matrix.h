@@ -13,10 +13,6 @@ struct Device_Ptr {
     int size;
     int bytesize;
 
-    int& x = dim[0];
-    int& y = dim[1];
-    int& z = dim[2];
-    int& w = dim[3];
 
     Device_Ptr(Matrix<Type> *input):data(input->device_data), num_dims(input->num_dims), size(input->size), bytesize(input->bytesize){
         for(int i = 0; i < num_dims; i++){
@@ -40,10 +36,7 @@ struct Matrix {
     int size;
     int bytesize;
 
-    int& x = dim[0];
-    int& y = dim[1];
-    int& z = dim[2];
-    int& w = dim[3];
+
 
     Matrix(){}
 
