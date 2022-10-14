@@ -10,17 +10,15 @@
             "type": "shell",
             "command": "nvcc",
             "args": [
-                "--compiler-options",
                 "-std=c++14",
                 "-O3",
                 "-w",
-                "-arch=sm_75",
                 "-maxrregcount=64",
                 "-rdc=true",
                 "-o",
                 "${workspaceFolder}/build",
                 "Main.cu",
-                "-I/home/theo/Projects/skeleton-key/skeleton-key", "-I${workspaceFolder}/include", "-I${workspaceFolder}/*",
+                "-I${workspaceFolder}/include", "-I${workspaceFolder}/*",
                 "-lcurand"
             ],
 

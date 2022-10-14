@@ -16,7 +16,8 @@ namespace Cell {
 
     const int num_attributes = 8;
 
-}; using namespace Cell;
+}
+ using namespace Cell;
 
 __global__ void draw_environment(sk::Device_Ptr<int> environment, sk::Device_Ptr<uchar> output) {
     DIMS_2D(maj, min);

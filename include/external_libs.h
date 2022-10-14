@@ -13,6 +13,9 @@
 namespace fs = std::filesystem;
 
 //opengl
+
+
+
 #include<GL/glew.h>
 
 #include<glm/glm.hpp>
@@ -31,7 +34,7 @@ namespace fs = std::filesystem;
 #include<curand_kernel.h>
 
 //skeleton key
-#include<skeleton_key.h>
+// #include<skeleton_key.h>
 
 
 #include"../Display/Window.h"
