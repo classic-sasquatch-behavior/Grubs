@@ -10,7 +10,6 @@
             "type": "shell",
             "command": "nvcc",
             "args": [
-                "--compiler-options",
                 "-std=c++17",
                 "-O3",
                 "-w",
@@ -20,7 +19,10 @@
                 "${workspaceFolder}/build",
                 "Main.cu",
                 "-I${workspaceFolder}/include", "-I${workspaceFolder}/**",
-                "-lcurand"
+                "-lcurand",
+                "-lglfw",
+                "-lGLEW",
+                "-lGL"
             ],
 
             "problemMatcher": [

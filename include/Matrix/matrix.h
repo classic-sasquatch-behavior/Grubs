@@ -1,5 +1,5 @@
 #pragma once
-#include "external_libs.h"
+#include "launch.h"
 
 template<typename Type>
 struct Matrix;
@@ -8,20 +8,24 @@ struct Matrix;
 template<typename Type>
 struct Device_Ptr {
     Type* data;
-    const int dim[4];
-    const int num_dims;
-    const int size;
-    const int bytesize;
+    int dim[4] = {1,1,1,1};
+    int num_dims;
+    int size;
+    int bytesize;
 
-    const int& x = dim[0];
-    const int& y = dim[1];
-    const int& z = dim[2];
-    const int& w = dim[3];
+    int& x = dim[0];
+    int& y = dim[1];
+    int& z = dim[2];
+    int& w = dim[3];
 
-    Device_Ptr(Matrix<Type> *input):data(input->device_data), num_dims(input->num_dims), size(input->size), bytesize(input->bytesize), dim(input->dim){}
+    Device_Ptr(Matrix<Type> *input):data(input->device_data), num_dims(input->num_dims), size(input->size), bytesize(input->bytesize){
+        for(int i = 0; i < num_dims; i++){
+            dim[i] = input->dim[i];
+        }
+    }
 
     __device__ __inline__ Type& operator()(int x, int y = 0, int z = 0, int w = 0){
-        return data[(((x * dim[1] + y) * dim[2] + z) * dim[3] + w];
+        return data[((x * dim[1] + y) * dim[2] + z) * dim[3] + w];
     }
 
 };
@@ -31,7 +35,7 @@ struct Matrix {
 
     Type* host_data;
     Type* device_data;
-    int dim[4];
+    int dim[4] = {1,1,1,1};
     int num_dims;
     int size;
     int bytesize;
@@ -44,13 +48,9 @@ struct Matrix {
     Matrix(){}
 
     Matrix(const std::vector<int> _dims, Type _constant = 0){
-        num_dims = _dims;
-        int _size = 1;
+        num_dims = _dims.size();
         for(int i = 0; i< num_dims; i++){
             dim[i] = _dims[i];
-        }
-        for(int i = num_dims; i < 4; i++){
-            dim[i] = 1;
         }
         size = dim[0] * dim[1] * dim[2] * dim[3];
         bytesize = size * sizeof(Type);
@@ -96,7 +96,7 @@ struct Matrix {
 
 
     inline Type& operator()(int x, int y = 0, int z = 0, int w = 0){
-        return host_data[(((x * dim[1] + y) * dim[2] + z) * dim[3] + w];
+        return host_data[((x * dim[1] + y) * dim[2] + z) * dim[3] + w];
     }
 
     void allocate(){
@@ -114,6 +114,10 @@ struct Matrix {
     void fill(int constant){
         cudaMemset(device_data, constant, bytesize);
         download();
+    }
+
+    void fill_device_memory(int constant){
+        cudaMemset(device_data, constant, bytesize);
     }
 
     void upload(){

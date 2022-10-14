@@ -7,6 +7,7 @@
 using namespace Substrate;
 int main () {
 
+    Species::computer_fish::run();
 
 
 

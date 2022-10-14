@@ -48,7 +48,7 @@
 
 
 #include"../Display/Window.h"
-#include"../Random/Random.h"
+#include"Random.cuh"
 
 typedef unsigned int uint;
 typedef unsigned char uchar;

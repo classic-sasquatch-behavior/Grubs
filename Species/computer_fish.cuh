@@ -3,6 +3,8 @@
 #include<external_libs.h>
 #include<Matrix/matrix.h>
 
+
+
 namespace Cell {
     enum attribute {
         color_r = 0,
@@ -60,11 +62,11 @@ __global__ void draw_cells(Device_Ptr<int> cells, Device_Ptr<uchar> output) {
 
 #define Random(_seed_, _min_, _max_) (((_seed_) % ((_max_) - (_min_)))+ (_min_))
 
-__global__ void spawn(curandState* random_states, sk::Device_Ptr<int> result) {
+__global__ void spawn(curandState* random_states, Device_Ptr<int> result) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(result.first_dim(), result.second_dim());
+    BOUNDS_2D(result.x, result.y);
 
-    int id = LINEAR_CAST(maj, min, result.second_dim());
+    int id = LINEAR_CAST(maj, min, result.y);
 
     curandState local_state = random_states[id];
 
@@ -89,9 +91,9 @@ __global__ void spawn(curandState* random_states, sk::Device_Ptr<int> result) {
 }
 
 //~15-16ms
-__global__ void change_environment(sk::Device_Ptr<int> environment, sk::Device_Ptr<int> cells) {
+__global__ void change_environment(Device_Ptr<int> environment, Device_Ptr<int> cells) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.first_dim(), environment.second_dim());
+    BOUNDS_2D(environment.x, environment.y);
 
     int value = cells(SELF, attribute::value);
     int weight = cells(SELF, attribute::weight);
@@ -102,9 +104,9 @@ __global__ void change_environment(sk::Device_Ptr<int> environment, sk::Device_P
     );
 }
 
-__global__ void dampen_environment(const float damping_factor, sk::Device_Ptr<int> environment) {
+__global__ void dampen_environment(const float damping_factor, Device_Ptr<int> environment) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.first_dim(), environment.second_dim());
+    BOUNDS_2D(environment.x, environment.y);
 
     float value = environment(maj, min);
     environment(maj, min) = -truncf(value * damping_factor);
@@ -112,9 +114,9 @@ __global__ void dampen_environment(const float damping_factor, sk::Device_Ptr<in
 
 }
 
-__global__ void radiate_environment(sk::Device_Ptr<int> environment) {
+__global__ void radiate_environment(Device_Ptr<int> environment) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.first_dim(), environment.second_dim());
+    BOUNDS_2D(environment.x, environment.y);
 
     int value = environment(SELF);
     FOR_MXN_EXCLUSIVE(n_maj, n_min, 3, 3, 
@@ -124,9 +126,9 @@ __global__ void radiate_environment(sk::Device_Ptr<int> environment) {
     )
 }
 
-__global__ void set_targets(sk::Device_Ptr<int> environment, sk::Device_Ptr<int> cells, sk::Device_Ptr<int> targets) {
+__global__ void set_targets(Device_Ptr<int> environment, Device_Ptr<int> cells, Device_Ptr<int> targets) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.first_dim(), environment.second_dim());
+    BOUNDS_2D(environment.x, environment.y);
 
 
     int attractor = cells(SELF, attribute::attractor);
@@ -151,10 +153,10 @@ __global__ void set_targets(sk::Device_Ptr<int> environment, sk::Device_Ptr<int>
     cells(SELF, attribute::move_min) = target_min;
 }
 
-__global__ void conflict(sk::Device_Ptr<int>cells, sk::Device_Ptr<int>targets, sk::Device_Ptr<int>future_cells, const int threshold = 3) {
+__global__ void conflict(Device_Ptr<int>cells, Device_Ptr<int>targets, Device_Ptr<int>future_cells, const int threshold = 3) {
 
     DIMS_2D(maj, min);
-    BOUNDS_2D(cells.first_dim(), cells.second_dim());
+    BOUNDS_2D(cells.x, cells.y);
 
     if (targets(maj, min) < 2) { return; }
 
@@ -188,9 +190,9 @@ __global__ void conflict(sk::Device_Ptr<int>cells, sk::Device_Ptr<int>targets, s
     }
 }
 
-__global__ void move(sk::Device_Ptr<int> environment, sk::Device_Ptr<int> cells, sk::Device_Ptr<int> targets, sk::Device_Ptr<int> future_cells) {
+__global__ void move(Device_Ptr<int> environment, Device_Ptr<int> cells, Device_Ptr<int> targets, Device_Ptr<int> future_cells) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.first_dim(), environment.second_dim());
+    BOUNDS_2D(environment.x, environment.y);
 
     int attractor = cells(SELF, attribute::attractor);
     int weight = cells(SELF, attribute::weight);
@@ -207,13 +209,13 @@ __global__ void move(sk::Device_Ptr<int> environment, sk::Device_Ptr<int> cells,
 
 }
 
-__global__ void hatch(const int threshold, curandState* random_states, sk::Device_Ptr<int> cells) {
+__global__ void hatch(const int threshold, curandState* random_states, Device_Ptr<int> cells) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(cells.first_dim(), cells.second_dim());
+    BOUNDS_2D(cells.x, cells.y);
     if (cells(SELF, attribute::value) < threshold){return;}
 
     int random[3];
-    int id = LINEAR_CAST(maj, min, cells.second_dim());
+    int id = LINEAR_CAST(maj, min, cells.x);
     curandState local_state = random_states[id];
 
     #pragma unroll
@@ -255,13 +257,13 @@ namespace Substrate {
             }
             
             namespace Seed{
-                static sk::Tensor<int> cells(int value = 0) {
+                static Matrix<int> cells(int value = 0) {
 
-                    sk::Tensor<int> result({Parameter::environment_width, Parameter::environment_height, Cell::num_attributes}, 0, "result");
+                    Matrix<int> result({Parameter::environment_width, Parameter::environment_height, Cell::num_attributes}, 0);
 
                     curandState* states = Random::Initialize::curand_xor(Parameter::environment_area, value);
     
-                    sk::configure::kernel_2d(result.first_dim(), result.second_dim());
+                    Launch::kernel_2d(result.x, result.y);
                     spawn<<<LAUNCH>>>(states, result); //try using the nvidia debugger
                     SYNC_KERNEL(spawn); 
     
@@ -274,11 +276,11 @@ namespace Substrate {
             };
 
             namespace Draw {
-                static sk::Tensor<uchar> frame(sk::Tensor<int>& cells, sk::Tensor<int>& environment) {
+                static Matrix<uchar> frame(Matrix<int>& cells, Matrix<int>& environment) {
 
-                    sk::Tensor<uchar> output({cells.first_dim(), cells.second_dim(), 3}, 0);
+                    Matrix<uchar> output({cells.x, cells.y, 3}, 0);
     
-                    sk::configure::kernel_2d(cells.first_dim(), cells.second_dim());
+                    Launch::kernel_2d(cells.x, cells.y);
                     //draw_environment<<<LAUNCH>>>(environment, output);
                     //SYNC_KERNEL(draw_environment);
     
@@ -291,8 +293,8 @@ namespace Substrate {
             };
 
             namespace Step {
-                static void polar(sk::Tensor<int>& future_cells, sk::Tensor<int>& environment, sk::Tensor<int>& cells, sk::Tensor<int>& targets, curandState* random) {
-                    sk::configure::kernel_2d(environment.first_dim(), environment.second_dim());
+                static void polar(Matrix<int>& future_cells, Matrix<int>& environment, Matrix<int>& cells, Matrix<int>& targets, curandState* random) {
+                    Launch::kernel_2d(environment.x, environment.y);
                     
                     const int thresh = 20;
                     hatch << <LAUNCH >> > (thresh, random, cells);
@@ -322,17 +324,17 @@ namespace Substrate {
             }
  
 
-            static void run(sk::Tensor<int> seed = Seed::cells(rand())) {
+            static void run(Matrix<int> seed = Seed::cells(rand())) {
 
                 curandState* random = Random::Initialize::curand_xor(Parameter::environment_area, rand());
                 Parameter::running = true;
 
-                sk::Tensor<int> environment({Parameter::environment_width, Parameter::environment_height},0);
-                sk::Tensor<int> cells = seed; 
-                sk::Tensor<int> future_cells({Parameter::environment_width, Parameter::environment_height, 8}, 0);
-                sk::Tensor<int> targets({Parameter::environment_width, Parameter::environment_height}, 0);
+                Matrix<int> environment({Parameter::environment_width, Parameter::environment_height},0);
+                Matrix<int> cells = seed; 
+                Matrix<int> future_cells({Parameter::environment_width, Parameter::environment_height, 8}, 0);
+                Matrix<int> targets({Parameter::environment_width, Parameter::environment_height}, 0);
 
-                sk::Tensor<uchar> frame({Parameter::environment_width, Parameter::environment_height, 3}, 0);
+                Matrix<uchar> frame({Parameter::environment_width, Parameter::environment_height, 3}, 0);
 
                 //af::Window window(Parameter::environment_width, Parameter::environment_height);
                 Window::open(Parameter::environment_width, Parameter::environment_height, "Substrate");
