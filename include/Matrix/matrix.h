@@ -1,6 +1,8 @@
 #pragma once
 #include "external_libs.h"
 
+template<typename Type>
+struct Matrix;
 
 
 template<typename Type>
@@ -61,14 +63,27 @@ struct Matrix {
         cudaFree(device_data);
     }
 
-    Matrix(const Matrix<Type>& input):num_dims(input.num_dims), dim(input.dim), size(input.size), bytesize(input.bytesize){
+    Matrix(const Matrix<Type>& input){
+        num_dims = input.num_dims;
+        for(int i  = 0; i < num_dims; i++){
+            dim[i] = input.dim[i];
+        }
+        size = input.size;
+        bytesize = input.bytesize;
         allocate();
         load(input.host_data);
     }
 
-    void operator=(const Matrix<Type>& input):num_dims(input.num_dims), dim(input.dim), size(input.size), bytesize(input.bytesize){
+    void operator= (const Matrix<Type>& input){
         delete host_data;
         cudaFree(device_data);
+
+        num_dims = input.num_dims;
+        for(int i  = 0; i < num_dims; i++){
+            dim[i] = input.dim[i];
+        }
+        size = input.size;
+        bytesize = input.bytesize;
 
         allocate();
         load(input.host_data);
@@ -77,6 +92,8 @@ struct Matrix {
     operator Device_Ptr<Type>(){
         return Device_Ptr<Type>(this);
     }
+
+
 
     inline Type& operator()(int x, int y = 0, int z = 0, int w = 0){
         return host_data[(((x * dim[1] + y) * dim[2] + z) * dim[3] + w];

@@ -1,8 +1,10 @@
 #pragma once
 
 #include"external_libs.h"
+#include"Matrix/matrix.h"
 
 typedef unsigned int gl_name;
+typedef unsigned char uchar;
 
 
 const static std::string path_to_shaders = "C:/Users/Thelonious/source/repos/Omega-null/Omega Null/on_display/include/display_manifold/objects/shaders/";
@@ -163,7 +165,7 @@ namespace Substrate {
         }
 
 
-        inline GLFWwindow* window;
+        static GLFWwindow* window;
 
         static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
             std::cout << std::endl << "scroll detected: " << yoffset << std::endl;
@@ -206,14 +208,15 @@ namespace Substrate {
 
         }
 
-        static void render(sk::Tensor<uchar>& input) {
 
-            uchar* data = input.data(sk::host);
+        static void render(Matrix<uchar>& input) {
+
+            uchar* data = input.host_data;
 
             gl_name transformLoc = glGetUniformLocation(Surface::Object::shader_program, "transform");
             glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(Surface::Object::transformation_matrix));
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input.first_dim(), input.second_dim(), 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input.x, input.y, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
             glGenerateMipmap(GL_TEXTURE_2D);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);

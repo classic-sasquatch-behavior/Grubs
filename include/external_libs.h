@@ -7,10 +7,20 @@
 #include<iostream>
 #include<string>
 #include<vector>
-#include<filesystem>
+
 #include<fstream>
 
-namespace fs = std::filesystem;
+#if __has_include(<filesystem>)
+  #include <filesystem>
+  namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+  #include <experimental/filesystem> 
+  namespace fs = std::experimental::filesystem;
+#else
+  error "Missing the <filesystem> header."
+#endif
+
+//namespace fs = std::filesystem;
 
 //opengl
 
@@ -40,7 +50,8 @@ namespace fs = std::filesystem;
 #include"../Display/Window.h"
 #include"../Random/Random.h"
 
-
+typedef unsigned int uint;
+typedef unsigned char uchar;
 
 
 

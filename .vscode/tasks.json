@@ -10,7 +10,8 @@
             "type": "shell",
             "command": "nvcc",
             "args": [
-                "-std=c++14",
+                "--compiler-options",
+                "-std=c++17",
                 "-O3",
                 "-w",
                 "-maxrregcount=64",

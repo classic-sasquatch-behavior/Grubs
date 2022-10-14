@@ -22,7 +22,7 @@ namespace Cell {
 
 __global__ void draw_environment(Device_Ptr<int> environment, Device_Ptr<uchar> output) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(environment.first_dim(), environment.second_dim());
+    BOUNDS_2D(environment.x, environment.y);
 
     int environment_value = environment(maj, min);
 
@@ -39,14 +39,14 @@ __global__ void draw_environment(Device_Ptr<int> environment, Device_Ptr<uchar> 
     int magnitude = fabsf(environment_value);
 
     for (int channel = 0; channel < 3; channel++) {
-        output.device_data[(((channel * environment.first_dim()) + maj) * environment.second_dim()) + min] = fminf(logf(10 * magnitude), 90) + polarity[channel];
+        output.data[(((channel * environment.x) + maj) * environment.y) + min] = fminf(logf(10 * magnitude), 90) + polarity[channel];
     }
 }
 
 //pretty goofy way to do this to be honest. But let's see how fast or slow it runs.
-__global__ void draw_cells(sk::Device_Ptr<int> cells, sk::Device_Ptr<uchar> output) {
+__global__ void draw_cells(Device_Ptr<int> cells, Device_Ptr<uchar> output) {
     DIMS_2D(maj, min);
-    BOUNDS_2D(cells.first_dim(), cells.second_dim());
+    BOUNDS_2D(cells.x, cells.y);
 
     if(cells(SELF, attribute::color_r) == 0 && cells(SELF, attribute::color_g) == 0 && cells(SELF, attribute::color_b) == 0) { return; }
 
