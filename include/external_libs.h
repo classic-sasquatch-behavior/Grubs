@@ -27,7 +27,7 @@ namespace fs = std::filesystem;
 
 
 //cuda
-#include<cuda.h>
+#include"cuda_includes.h"
 
 //curand
 #include<curand.h>
