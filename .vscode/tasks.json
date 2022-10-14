@@ -18,12 +18,15 @@
                 "-o",
                 "${workspaceFolder}/build",
                 "Main.cu",
-                "-I${workspaceFolder}/include", "-I${workspaceFolder}/*",
+                "-I${workspaceFolder}/include", "-I${workspaceFolder}/**",
                 "-lcurand"
             ],
 
             "problemMatcher": [
-                "$nvcc"
+                {
+                    "base":"$nvcc",
+                    "fileLocation": ["autoDetect", "${workspaceFolder}"]
+                }
             ],
 
             "group": {

@@ -22,17 +22,17 @@ struct Device_Ptr {
         return data[(((x * dim[1] + y) * dim[2] + z) * dim[3] + w];
     }
 
-}
+};
 
 template<typename Type>
 struct Matrix {
 
     Type* host_data;
     Type* device_data;
-    const int dim[4];
-    const int num_dims;
-    const int size;
-    const int bytesize;
+    int dim[4];
+    int num_dims;
+    int size;
+    int bytesize;
 
     int& x = dim[0];
     int& y = dim[1];
@@ -107,7 +107,7 @@ struct Matrix {
         cudaMemcpy(host_data, device_data, bytesize, cudaMemcpyDeviceToHost);
     }
 
-}
+};
 
 
 

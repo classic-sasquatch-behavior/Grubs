@@ -1,6 +1,7 @@
 #pragma once
 
 #include<external_libs.h>
+#include<Matrix/matrix.h>
 
 namespace Cell {
     enum attribute {
@@ -19,7 +20,7 @@ namespace Cell {
 }
  using namespace Cell;
 
-__global__ void draw_environment(sk::Device_Ptr<int> environment, sk::Device_Ptr<uchar> output) {
+__global__ void draw_environment(Device_Ptr<int> environment, Device_Ptr<uchar> output) {
     DIMS_2D(maj, min);
     BOUNDS_2D(environment.first_dim(), environment.second_dim());
 
