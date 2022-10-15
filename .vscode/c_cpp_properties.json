@@ -10,7 +10,7 @@
         {
             "name": "default",
             "intelliSenseMode": "${default}",
-            "includePath": ["${myDefaultIncludePath}", "/home/theo/Projects/skeleton-key/skeleton-key"],
+            "includePath": ["${myDefaultIncludePath}"],
             "defines":["VERBOSE"],
             "forcedInclude": [],
             "compilerPath": "${myCompilerPath}",
