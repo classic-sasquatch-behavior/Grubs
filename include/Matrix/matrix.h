@@ -88,7 +88,12 @@ struct Matrix {
 
         //detect the input matrix's sync state
         //load according to that sync state
-        load(input.data(host));
+        Direction input_state = input.recent;
+        switch(input_state){
+            case host: host_load(input.host_data);
+            case device: device_load(input.device_data);
+        }
+        desync(input_state);
     }
 
     void operator= (const Matrix<Type>& input){
@@ -103,7 +108,13 @@ struct Matrix {
         bytesize = input.bytesize;
 
         allocate();
-        load(input.data(host));
+
+        Direction input_state = input.recent;
+        switch(input_state){
+            case host: host_load(input.host_data);
+            case device: device_load(input.device_data);
+        }
+        desync(input_state);
     }
 
     operator Device_Ptr<Type>(){
@@ -142,15 +153,14 @@ struct Matrix {
         }
     }
 
-
-
-
-
-    void load(Type* input){
+    void host_load(Type* input){
         for(int i = 0; i < size; i++){
             host_data[i] = input[i];
         }
-        upload();
+    }
+
+    void device_load(Type* input){
+        cudaMemcpy(device_data, input, bytesize, cudaMemcpyDeviceToDevice);
     }
 
     void fill(int constant){

@@ -340,7 +340,7 @@ namespace Substrate {
                 Window::open(Parameter::environment_width, Parameter::environment_height, "Substrate");
 
                 int start_time = now_ms();
-                int FPS = 60;
+                int FPS = 30;
                 do {
                     int current_time = now_ms();
                     int wait_time = (1000 / FPS) - (current_time - start_time);
@@ -352,8 +352,8 @@ namespace Substrate {
                     frame = Draw::frame(cells, environment); 
 
                     Window::render(frame);
-                    //window.image(frame); 
-                    
+
+                    //need to put engine and window on different threads to stop the flickering
                     //std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
                     start_time = now_ms();
                     //std::cout << "FPS: " << 1000 / wait_time << std::endl;

@@ -7,6 +7,8 @@
 #include<iostream>
 #include<string>
 #include<vector>
+#include<thread>
+#include<unistd.h>
 
 #include<fstream>
 
