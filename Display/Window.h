@@ -7,7 +7,7 @@ typedef unsigned int gl_name;
 typedef unsigned char uchar;
 
 
-const static std::string path_to_shaders = "/home/theo/Projects/Substrate/Display/shaders/";
+const static std::string path_to_shaders = fs::current_path().string() + "/Display/shaders/";
 
 static std::string load_shader(std::string shader_name) {
 	fs::path shader_path = path_to_shaders + shader_name;
