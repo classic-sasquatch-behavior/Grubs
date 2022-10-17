@@ -56,6 +56,8 @@ namespace Substrate {
                 static glm::mat4 transformation_matrix; 
                 static float zoom_factor;
 
+                static float camera_location[2] = {0.0f,0.0f};
+
                 static uint square_indices[] = {  // note that we start from 0!
                     0, 1, 3,   // first triangle
                     1, 2, 3    // second triangle
@@ -69,15 +71,7 @@ namespace Substrate {
                 };
             }
 
-            namespace Viewport {
 
-                static glm::vec2 position = { 0.0, 0.0 };
-
-                static void move() {
-
-                }
-
-            }
 
 
             namespace Initialize {
@@ -175,6 +169,10 @@ namespace Substrate {
             Surface::Object::zoom_factor = fmin(fmax(0.1, Surface::Object::zoom_factor), 1.0f);
 
             Surface::Object::transformation_matrix = glm::mat4(Surface::Object::zoom_factor);
+
+            Surface::Object::camera_location[0] *= Surface::Object::zoom_factor;
+            Surface::Object::camera_location[1] *= Surface::Object::zoom_factor;
+            
         }
 
 
@@ -191,12 +189,27 @@ namespace Substrate {
             Substrate::Species::computer_fish::Parameter::running = false;
         }
 
+        static void move(float move_x, float move_y) {
+            Surface::Object::camera_location[0] += move_x;
+            Surface::Object::camera_location[1] += move_y;
+
+            Surface::Object::camera_location[0] = fminf(Surface::Object::camera_location[0], 1.0f - Surface::Object::zoom_factor);
+            Surface::Object::camera_location[1] = fminf(Surface::Object::camera_location[1], 1.0f - Surface::Object::zoom_factor);
+
+            Surface::Object::camera_location[0] = fmaxf(Surface::Object::camera_location[0], 0);
+            Surface::Object::camera_location[1] = fmaxf(Surface::Object::camera_location[1], 0);
+
+            std::cout << std::endl;
+            std::cout << "new x: " << Surface::Object::camera_location[0] << ", ";
+            std::cout << "new y: " << Surface::Object::camera_location[1] << ", ";
+        }
+
         static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
             switch (key) {
-                case GLFW_KEY_W: std::cout << "w" << std::endl; break;
-                case GLFW_KEY_A: std::cout << "a" << std::endl; break;
-                case GLFW_KEY_S: std::cout << "s" << std::endl; break;
-                case GLFW_KEY_D: std::cout << "d" << std::endl; break;
+                case GLFW_KEY_W: std::cout << "move up" << std::endl; move(0,0.01); break;
+                case GLFW_KEY_A: std::cout << "move left" << std::endl; move(-0.01,0); break;
+                case GLFW_KEY_S: std::cout << "move down" << std::endl; move(0,-0.01); break;
+                case GLFW_KEY_D: std::cout << "move right" << std::endl; move(0.01,0); break;
                 case GLFW_KEY_ESCAPE:  quit(); break;
                 case GLFW_KEY_Q: quit(); break;
                 
@@ -236,6 +249,10 @@ namespace Substrate {
 
             gl_name transformLoc = glGetUniformLocation(Surface::Object::shader_program, "transform");
             glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(Surface::Object::transformation_matrix));
+
+            gl_name cameraLoc = glGetUniformLocation(Surface::Object::shader_program, "camera_location");
+            glUniform2fv(cameraLoc, 1, Surface::Object::camera_location);
+
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input.dim[0], input.dim[1], 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
