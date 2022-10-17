@@ -3,6 +3,8 @@
 #include"external_libs.h"
 #include"Matrix/matrix.h"
 
+
+
 typedef unsigned int gl_name;
 typedef unsigned char uchar;
 
@@ -23,6 +25,17 @@ static std::string load_shader(std::string shader_name) {
 }
 
 namespace Substrate {
+
+    namespace Species {
+
+        namespace computer_fish{
+
+            namespace Parameter{
+                extern bool running;
+            }
+
+        }
+    }
 
     namespace Window {
         
@@ -173,12 +186,20 @@ namespace Substrate {
             std::cout << "new zoom_factor: " << Surface::Object::zoom_factor << std::endl;
         }
 
+        static void quit(){
+            std::cout << std::endl << "quitting..." << std::endl;
+            Substrate::Species::computer_fish::Parameter::running = false;
+        }
+
         static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
             switch (key) {
                 case GLFW_KEY_W: std::cout << "w" << std::endl; break;
                 case GLFW_KEY_A: std::cout << "a" << std::endl; break;
                 case GLFW_KEY_S: std::cout << "s" << std::endl; break;
                 case GLFW_KEY_D: std::cout << "d" << std::endl; break;
+                case GLFW_KEY_ESCAPE:  quit(); break;
+                case GLFW_KEY_Q: quit(); break;
+                
                 default: std::cout << "unknown key" << std::endl; break;
             }
         }

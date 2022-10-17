@@ -250,7 +250,7 @@ namespace Substrate {
         namespace computer_fish {
 
             namespace Parameter {
-                static bool running = false;
+                inline bool running = false;
                 const int environment_width = 768;
                 const int environment_height = 768;
                 const int environment_area = environment_width * environment_height; 
