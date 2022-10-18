@@ -164,25 +164,11 @@ namespace Substrate {
 
         }
 
-        static void zoom(double amount) {
-            Surface::Object::zoom_factor -= amount /100.0f;
-            Surface::Object::zoom_factor = fmin(fmax(0.1, Surface::Object::zoom_factor), 1.0f);
-
-            Surface::Object::transformation_matrix = glm::mat4(Surface::Object::zoom_factor);
-
-            Surface::Object::camera_location[0] *= Surface::Object::zoom_factor;
-            Surface::Object::camera_location[1] *= Surface::Object::zoom_factor;
-            
-        }
 
 
         static GLFWwindow* window;
 
-        static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-            std::cout << std::endl << "scroll detected: " << yoffset << std::endl;
-            zoom(yoffset);
-            std::cout << "new zoom_factor: " << Surface::Object::zoom_factor << std::endl;
-        }
+
 
         static void quit(){
             std::cout << std::endl << "quitting..." << std::endl;
@@ -203,6 +189,24 @@ namespace Substrate {
             std::cout << "new x: " << Surface::Object::camera_location[0] << ", ";
             std::cout << "new y: " << Surface::Object::camera_location[1] << ", ";
         }
+
+        static void zoom(double amount) {
+            Surface::Object::zoom_factor -= amount /100.0f;
+            Surface::Object::zoom_factor = fmin(fmax(0.1, Surface::Object::zoom_factor), 1.0f);
+
+            Surface::Object::transformation_matrix = glm::mat4(Surface::Object::zoom_factor);
+
+            move((amount /100.0f)/2,(amount /100.0f)/2);
+
+            
+        }
+
+        static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+            std::cout << std::endl << "scroll detected: " << yoffset << std::endl;
+            zoom(yoffset);
+            std::cout << "new zoom_factor: " << Surface::Object::zoom_factor << std::endl;
+        }
+
 
         static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
             switch (key) {

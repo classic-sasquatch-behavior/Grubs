@@ -251,8 +251,8 @@ namespace Substrate {
 
             namespace Parameter {
                 inline bool running = false;
-                const int environment_width = 768;
-                const int environment_height = 768;
+                const int environment_width = 2048;
+                const int environment_height = 2048;
                 const int environment_area = environment_width * environment_height; 
             }
             
@@ -337,7 +337,7 @@ namespace Substrate {
                 Matrix<uchar> frame({Parameter::environment_width, Parameter::environment_height, 3}, 0);
 
                 //af::Window window(Parameter::environment_width, Parameter::environment_height);
-                Window::open(Parameter::environment_width, Parameter::environment_height, "Substrate");
+                Window::open(768, 768, "Substrate");
 
                 int start_time = now_ms();
                 int FPS = 30;
