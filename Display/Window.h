@@ -24,18 +24,16 @@ static std::string load_shader(std::string shader_name) {
 	return output;
 }
 
-namespace Substrate {
 
-    namespace Species {
 
-        namespace computer_fish{
+        namespace Grubs{
 
             namespace Parameter{
                 extern bool running;
             }
 
         }
-    }
+    
 
     namespace Window {
         
@@ -172,7 +170,7 @@ namespace Substrate {
 
         static void quit(){
             std::cout << std::endl << "quitting..." << std::endl;
-            Substrate::Species::computer_fish::Parameter::running = false;
+            Grubs::Parameter::running = false;
         }
 
         static void move(float move_x, float move_y) {
@@ -281,4 +279,4 @@ namespace Substrate {
     }
 
     
-}
+

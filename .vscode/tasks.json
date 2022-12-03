@@ -11,10 +11,9 @@
             "command": "nvcc",
             "args": [
                 "-std=c++17",
-                "-O3",
+                "-O0",
                 "-w",
-                "-maxrregcount=64",
-                "-rdc=true",
+                "-rdc=false",
                 "-o",
                 "${workspaceFolder}/build",
                 "Main.cu",
@@ -28,7 +27,7 @@
             "problemMatcher": [
                 {
                     "base":"$nvcc",
-                    "fileLocation": ["autoDetect", "${workspaceFolder}"]
+                    "fileLocation": ["autoDetect", "${workspaceFolder}/**"]
                 }
             ],
 

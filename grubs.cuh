@@ -243,124 +243,120 @@ __global__ void hatch(const int threshold, curandState* random_states, Device_Pt
 }
 
 
-namespace Substrate {
 
-    namespace Species {
 
-        namespace computer_fish {
+namespace Grubs {
 
-            namespace Parameter {
-                inline bool running = false;
-                const int environment_width = 2048;
-                const int environment_height = 2048;
-                const int environment_area = environment_width * environment_height; 
-            }
-            
-            namespace Seed{
-                static Matrix<int> cells(int value = 0) {
-
-                    Matrix<int> result({Parameter::environment_width, Parameter::environment_height, Cell::num_attributes}, 0);
-
-                    curandState* states = Random::Initialize::curand_xor(Parameter::environment_area, value);
+    namespace Parameter {
+        inline bool running = false;
+        const int environment_width = 2048;
+        const int environment_height = 2048;
+        const int environment_area = environment_width * environment_height; 
+    }
     
-                    Launch::kernel_2d(result.dim[0], result.dim[1]);
-                    spawn<<<LAUNCH>>>(states, result); //try using the nvidia debugger
-                    SYNC_KERNEL(spawn); 
-    
-                    cudaFree(states); //bad way of doing this, because it's not clear that one would have to call cudafree on curand_xor. should at least put it in on::Random::Delete
-                    //TODO: create a struct to control curand more closely
-    
-                    return result;
-    
-                }
-            };
+    namespace Seed{
+        static Matrix<int> cells(int value = 0) {
 
-            namespace Draw {
-                static Matrix<uchar> frame(Matrix<int>& cells, Matrix<int>& environment) {
+            Matrix<int> result({Parameter::environment_width, Parameter::environment_height, Cell::num_attributes}, 0);
 
-                    Matrix<uchar> output({cells.dim[0], cells.dim[1], 3}, 0);
-    
-                    Launch::kernel_2d(cells.dim[0], cells.dim[1]);
-                    //draw_environment<<<LAUNCH>>>(environment, output);
-                    //SYNC_KERNEL(draw_environment);
-    
-                    draw_cells <<<LAUNCH>>> (cells, output);
-                    SYNC_KERNEL(draw_cells);
-    
-                    return output;
-    
-                }
-            };
+            curandState* states = Random::Initialize::curand_xor(Parameter::environment_area, value);
 
-            namespace Step {
-                static void polar(Matrix<int>& future_cells, Matrix<int>& environment, Matrix<int>& cells, Matrix<int>& targets, curandState* random) {
-                    Launch::kernel_2d(environment.dim[0], environment.dim[1]);
-                    
-                    const int thresh = 20;
-                    hatch << <LAUNCH >> > (thresh, random, cells);
-                    SYNC_KERNEL(hatch);           
-                    change_environment<<<LAUNCH>>> (environment, cells); 
-                    SYNC_KERNEL(change_environment);
-    
-                    radiate_environment << <LAUNCH >> > (environment);
-                    SYNC_KERNEL(radiate_environment);
-    
-                    const float damping_factor = 0.1;
-                    dampen_environment<<<LAUNCH>>>(damping_factor, environment);
-                    SYNC_KERNEL(dampen_environment);
-    
-                    set_targets<<<LAUNCH>>>(environment, cells, targets);
-                    SYNC_KERNEL(set_targets);
-    
-                    const int threshold = 500;
-                    conflict<<<LAUNCH>>>(cells, targets, future_cells, threshold);
-                    SYNC_KERNEL(conflict);
-    
-                    move<<<LAUNCH>>> (environment, cells, targets, future_cells); 
-                    SYNC_KERNEL(move);
-    
-                    cells = future_cells;
-                }
-            }
- 
+            Launch::kernel_2d(result.dim[0], result.dim[1]);
+            spawn<<<LAUNCH>>>(states, result); //try using the nvidia debugger
+            SYNC_KERNEL(spawn); 
 
-            static void run(Matrix<int> seed = Seed::cells(rand())) {
+            cudaFree(states); //bad way of doing this, because it's not clear that one would have to call cudafree on curand_xor. should at least put it in on::Random::Delete
+            //TODO: create a struct to control curand more closely
 
-                curandState* random = Random::Initialize::curand_xor(Parameter::environment_area, rand());
-                Parameter::running = true;
+            return result;
 
-                Matrix<int> environment({Parameter::environment_width, Parameter::environment_height},0);
-                Matrix<int> cells = seed; 
-                Matrix<int> future_cells({Parameter::environment_width, Parameter::environment_height, 8}, 0);
-                Matrix<int> targets({Parameter::environment_width, Parameter::environment_height}, 0);
-
-                Matrix<uchar> frame({Parameter::environment_width, Parameter::environment_height, 3}, 0);
-
-                //af::Window window(Parameter::environment_width, Parameter::environment_height);
-                Window::open(768, 768, "Substrate");
-
-                int start_time = now_ms();
-                int FPS = 30;
-                do {
-                    int current_time = now_ms();
-                    int wait_time = (1000 / FPS) - (current_time - start_time);
-
-                    Step::polar(future_cells, environment, cells, targets, random); 
-                    //environment.fill_device_memory(0);
-                    future_cells.fill_device_memory(0);
-                    targets.fill_device_memory(0);
-                    frame = Draw::frame(cells, environment); 
-
-                    Window::render(frame);
-
-                    //need to put engine and window on different threads to stop the flickering
-                    //std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
-                    start_time = now_ms();
-                    //std::cout << "FPS: " << 1000 / wait_time << std::endl;
-                } while (Parameter::running);
-
-                Window::close();
-            }
         }
+    };
+
+    namespace Draw {
+        static Matrix<uchar> frame(Matrix<int>& cells, Matrix<int>& environment) {
+
+            Matrix<uchar> output({cells.dim[0], cells.dim[1], 3}, 0);
+
+            Launch::kernel_2d(cells.dim[0], cells.dim[1]);
+            //draw_environment<<<LAUNCH>>>(environment, output);
+            //SYNC_KERNEL(draw_environment);
+
+            draw_cells <<<LAUNCH>>> (cells, output);
+            SYNC_KERNEL(draw_cells);
+
+            return output;
+
+        }
+    };
+
+    namespace Step {
+        static void polar(Matrix<int>& future_cells, Matrix<int>& environment, Matrix<int>& cells, Matrix<int>& targets, curandState* random) {
+            Launch::kernel_2d(environment.dim[0], environment.dim[1]);
+            
+            const int thresh = 20;
+            hatch << <LAUNCH >> > (thresh, random, cells);
+            SYNC_KERNEL(hatch);           
+            change_environment<<<LAUNCH>>> (environment, cells); 
+            SYNC_KERNEL(change_environment);
+
+            radiate_environment << <LAUNCH >> > (environment);
+            SYNC_KERNEL(radiate_environment);
+
+            const float damping_factor = 0.1;
+            dampen_environment<<<LAUNCH>>>(damping_factor, environment);
+            SYNC_KERNEL(dampen_environment);
+
+            set_targets<<<LAUNCH>>>(environment, cells, targets);
+            SYNC_KERNEL(set_targets);
+
+            const int threshold = 500;
+            conflict<<<LAUNCH>>>(cells, targets, future_cells, threshold);
+            SYNC_KERNEL(conflict);
+
+            move<<<LAUNCH>>> (environment, cells, targets, future_cells); 
+            SYNC_KERNEL(move);
+
+            cells = future_cells;
+        }
+    }
+
+
+    static void run(Matrix<int> seed = Seed::cells(rand())) {
+
+        curandState* random = Random::Initialize::curand_xor(Parameter::environment_area, rand());
+        Parameter::running = true;
+
+        Matrix<int> environment({Parameter::environment_width, Parameter::environment_height},0);
+        Matrix<int> cells = seed; 
+        Matrix<int> future_cells({Parameter::environment_width, Parameter::environment_height, 8}, 0);
+        Matrix<int> targets({Parameter::environment_width, Parameter::environment_height}, 0);
+
+        Matrix<uchar> frame({Parameter::environment_width, Parameter::environment_height, 3}, 0);
+
+        //af::Window window(Parameter::environment_width, Parameter::environment_height);
+        Window::open(768, 768, "Substrate");
+
+        int start_time = now_ms();
+        int FPS = 30;
+        do {
+            int current_time = now_ms();
+            int wait_time = (1000 / FPS) - (current_time - start_time);
+
+            Step::polar(future_cells, environment, cells, targets, random); 
+            //environment.fill_device_memory(0);
+            future_cells.fill_device_memory(0);
+            targets.fill_device_memory(0);
+            frame = Draw::frame(cells, environment); 
+
+            Window::render(frame);
+
+            //need to put engine and window on different threads to stop the flickering
+            //std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+            start_time = now_ms();
+            //std::cout << "FPS: " << 1000 / wait_time << std::endl;
+        } while (Parameter::running);
+
+        Window::close();
     }
 }
