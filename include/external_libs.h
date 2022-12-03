@@ -22,12 +22,7 @@
   error "Missing the <filesystem> header."
 #endif
 
-//namespace fs = std::filesystem;
-
 //opengl
-
-
-
 #include<GL/glew.h>
 
 #include<glm/glm.hpp>
@@ -37,17 +32,12 @@
 #include<GL/gl.h>
 #include<GLFW/glfw3.h>
 
-
 //cuda
 #include"cuda_includes.h"
 
 //curand
 #include<curand.h>
 #include<curand_kernel.h>
-
-//skeleton key
-// #include<skeleton_key.h>
-
 
 #include"../Display/Window.h"
 #include"Random.cuh"

@@ -249,9 +249,9 @@ namespace Grubs {
 
     namespace Parameter {
         inline bool running = false;
-        const int environment_width = 2048;
-        const int environment_height = 2048;
-        const int environment_area = environment_width * environment_height; 
+        int environment_width = 2048;
+        int environment_height = 2048;
+        int environment_area = environment_width * environment_height; 
     }
     
     namespace Seed{
@@ -265,8 +265,7 @@ namespace Grubs {
             spawn<<<LAUNCH>>>(states, result); //try using the nvidia debugger
             SYNC_KERNEL(spawn); 
 
-            cudaFree(states); //bad way of doing this, because it's not clear that one would have to call cudafree on curand_xor. should at least put it in on::Random::Delete
-            //TODO: create a struct to control curand more closely
+            cudaFree(states); 
 
             return result;
 
@@ -279,8 +278,6 @@ namespace Grubs {
             Matrix<uchar> output({cells.dim[0], cells.dim[1], 3}, 0);
 
             Launch::kernel_2d(cells.dim[0], cells.dim[1]);
-            //draw_environment<<<LAUNCH>>>(environment, output);
-            //SYNC_KERNEL(draw_environment);
 
             draw_cells <<<LAUNCH>>> (cells, output);
             SYNC_KERNEL(draw_cells);
@@ -322,7 +319,14 @@ namespace Grubs {
     }
 
 
-    static void run(Matrix<int> seed = Seed::cells(rand())) {
+    static void run(int simulation_size = 2048) {
+
+
+        Parameter::environment_width = simulation_size;
+        Parameter::environment_height = simulation_size;
+        Parameter::environment_area = simulation_size * simulation_size;
+
+        Matrix<int> seed = Seed::cells(rand());
 
         curandState* random = Random::Initialize::curand_xor(Parameter::environment_area, rand());
         Parameter::running = true;
@@ -334,17 +338,15 @@ namespace Grubs {
 
         Matrix<uchar> frame({Parameter::environment_width, Parameter::environment_height, 3}, 0);
 
-        //af::Window window(Parameter::environment_width, Parameter::environment_height);
-        Window::open(768, 768, "Substrate");
+        Window::open(768, 768, "Grubs");
 
         int start_time = now_ms();
-        int FPS = 30;
+        //int FPS = 60;
         do {
             int current_time = now_ms();
-            int wait_time = (1000 / FPS) - (current_time - start_time);
+            int wait_time = (1000 / Window::FPS) - (current_time - start_time);
 
             Step::polar(future_cells, environment, cells, targets, random); 
-            //environment.fill_device_memory(0);
             future_cells.fill_device_memory(0);
             targets.fill_device_memory(0);
             frame = Draw::frame(cells, environment); 
@@ -352,7 +354,7 @@ namespace Grubs {
             Window::render(frame);
 
             //need to put engine and window on different threads to stop the flickering
-            //std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+            std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
             start_time = now_ms();
             //std::cout << "FPS: " << 1000 / wait_time << std::endl;
         } while (Parameter::running);
